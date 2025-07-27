@@ -380,3 +380,20 @@ func (f *fragmentNode) Render(c *Context, w io.Writer) error {
 func Fragment(children ...Node) Node {
 	return &fragmentNode{children}
 }
+
+type doctypeNode struct {
+	doctype string
+}
+
+func (d *doctypeNode) Render(c *Context, w io.Writer) error {
+	_, err := fmt.Fprintf(w, "<!DOCTYPE %s>", d.doctype)
+	return err
+}
+
+func Doctype(doctype string) Node {
+	return &doctypeNode{doctype}
+}
+
+func DoctypeHTML5() Node {
+	return Doctype("html")
+}
