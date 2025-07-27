@@ -363,3 +363,20 @@ func Text(text string) Node {
 func Textf(format string, args ...any) Node {
 	return &textNode{fmt.Sprintf(format, args...)}
 }
+
+type fragmentNode struct {
+	children []Node
+}
+
+func (f *fragmentNode) Render(c *Context, w io.Writer) error {
+	for i := range f.children {
+		if err := f.children[i].Render(c, w); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func Fragment(children ...Node) Node {
+	return &fragmentNode{children}
+}
