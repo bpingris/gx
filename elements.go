@@ -1,8 +1,10 @@
 package gx
 
 import (
+	"bytes"
 	"fmt"
 	"io"
+	"strings"
 )
 
 type Element struct {
@@ -396,4 +398,73 @@ func Doctype(doctype string) Node {
 
 func DoctypeHTML5() Node {
 	return Doctype("html")
+}
+
+const slotPlaceholder = "<!-- slot -->"
+
+type slotNode struct{}
+
+func (s *slotNode) Render(c *Context, w io.Writer) error {
+	_, err := w.Write([]byte(slotPlaceholder))
+	return err
+}
+
+func Slot() Node {
+	return &slotNode{}
+}
+
+type CompiledTemplate struct {
+	beforeSlot string
+	afterSlot  string
+}
+
+func (t *CompiledTemplate) Render(children ...Node) Node {
+	return &compiledNode{
+		template: t,
+		children: children,
+	}
+}
+
+type compiledNode struct {
+	template *CompiledTemplate
+	children []Node
+}
+
+func (cn *compiledNode) Render(c *Context, w io.Writer) error {
+	if _, err := w.Write([]byte(cn.template.beforeSlot)); err != nil {
+		return err
+	}
+
+	for i := range cn.children {
+		if err := cn.children[i].Render(c, w); err != nil {
+			return err
+		}
+	}
+
+	_, err := w.Write([]byte(cn.template.afterSlot))
+	return err
+}
+
+func Compile(template Node) (*CompiledTemplate, error) {
+	ctx := NewContext()
+	var buf bytes.Buffer
+
+	if err := template.Render(ctx, &buf); err != nil {
+		return nil, err
+	}
+
+	html := buf.String()
+
+	parts := strings.Split(html, slotPlaceholder)
+	if len(parts) != 2 {
+		return &CompiledTemplate{
+			beforeSlot: html,
+			afterSlot:  "",
+		}, nil
+	}
+
+	return &CompiledTemplate{
+		beforeSlot: parts[0],
+		afterSlot:  parts[1],
+	}, nil
 }

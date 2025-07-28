@@ -71,3 +71,27 @@ func TestNestedElements(t *testing.T) {
 		t.Errorf("expected '%q', got '%q'", expected, buf.String())
 	}
 }
+
+func TestCompiledNodes(t *testing.T) {
+	ctx := gx.NewContext()
+	var buf strings.Builder
+
+	template := gx.Div(
+		gx.Div(gx.ID("before")),
+		gx.Slot(),
+		gx.Div(gx.ID("after")),
+	)
+
+	compiledTemplate, _ := gx.Compile(template)
+	compiledTemplate.Render(gx.Div(gx.ID("slot"))).Render(ctx, &buf)
+
+	expected := `<div>
+		<div id="before"/>
+		<div id="slot"/>
+		<div id="after"/>
+	</div>`
+
+	if buf.String() != normalizeHTML(expected) {
+		t.Errorf("expected '%q', got '%q'", expected, buf.String())
+	}
+}
