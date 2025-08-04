@@ -234,6 +234,10 @@ func Input(children ...Node) Node {
 	return &Element{"input", children}
 }
 
+func Fieldset(children ...Node) Node {
+	return &Element{"fieldset", children}
+}
+
 func Button(children ...Node) Node {
 	return &Element{"button", children}
 }
