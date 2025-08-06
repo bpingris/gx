@@ -7,6 +7,23 @@ import (
 	"strings"
 )
 
+var voidElements = map[string]bool{
+	"area":   true,
+	"base":   true,
+	"br":     true,
+	"col":    true,
+	"embed":  true,
+	"hr":     true,
+	"img":    true,
+	"input":  true,
+	"link":   true,
+	"meta":   true,
+	"param":  true,
+	"source": true,
+	"track":  true,
+	"wbr":    true,
+}
+
 type Element struct {
 	tag      string
 	children []Node
@@ -34,8 +51,13 @@ func (e *Element) Render(c *Context, w io.Writer) error {
 		}
 	}
 
+	if voidElements[e.tag] {
+		_, err := w.Write([]byte(">"))
+		return err
+	}
+
 	if len(contentChildren) == 0 {
-		_, err := w.Write([]byte("/>"))
+		_, err := w.Write([]byte("></" + e.tag + ">"))
 		return err
 	}
 
@@ -230,8 +252,8 @@ func Form(children ...Node) Node {
 	return &Element{"form", children}
 }
 
-func Input(children ...Node) Node {
-	return &Element{"input", children}
+func Input() Node {
+	return &Element{"input", nil}
 }
 
 func Fieldset(children ...Node) Node {
@@ -258,8 +280,8 @@ func Textarea(children ...Node) Node {
 	return &Element{"textarea", children}
 }
 
-func Img(children ...Node) Node {
-	return &Element{"img", children}
+func Img() Node {
+	return &Element{"img", nil}
 }
 
 func Video(children ...Node) Node {
@@ -278,12 +300,12 @@ func Svg(children ...Node) Node {
 	return &Element{"svg", children}
 }
 
-func Br(children ...Node) Node {
-	return &Element{"br", children}
+func Br() Node {
+	return &Element{"br", nil}
 }
 
-func Hr(children ...Node) Node {
-	return &Element{"hr", children}
+func Hr() Node {
+	return &Element{"hr", nil}
 }
 
 func CSSLink(url string) Node {

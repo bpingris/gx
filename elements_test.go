@@ -86,10 +86,43 @@ func TestCompiledNodes(t *testing.T) {
 	compiledTemplate.Render(gx.Div(gx.ID("slot"))).Render(ctx, &buf)
 
 	expected := `<div>
-		<div id="before"/>
-		<div id="slot"/>
-		<div id="after"/>
+		<div id="before"></div>
+		<div id="slot"></div>
+		<div id="after"></div>
 	</div>`
+
+	if buf.String() != normalizeHTML(expected) {
+		t.Errorf("expected '%q', got '%q'", expected, buf.String())
+	}
+}
+
+func TestVoidElements(t *testing.T) {
+	ctx := gx.NewContext()
+	var buf strings.Builder
+
+	div := gx.Div(gx.Class("foo"), gx.Br())
+
+	div.Render(ctx, &buf)
+
+	expected := `<div class="foo"><br></div>`
+
+	if buf.String() != normalizeHTML(expected) {
+		t.Errorf("expected '%q', got '%q'", expected, buf.String())
+	}
+}
+
+func TestClosingElementsWithoutChildren(t *testing.T) {
+	ctx := gx.NewContext()
+	var buf strings.Builder
+
+	div := gx.Div(
+		gx.Class("foo"),
+		gx.Script(gx.Src("foo.js")),
+	)
+
+	div.Render(ctx, &buf)
+
+	expected := `<div class="foo"><script src="foo.js"></script></div>`
 
 	if buf.String() != normalizeHTML(expected) {
 		t.Errorf("expected '%q', got '%q'", expected, buf.String())
