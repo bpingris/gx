@@ -252,8 +252,8 @@ func Form(children ...Node) Node {
 	return &Element{"form", children}
 }
 
-func Input() Node {
-	return &Element{"input", nil}
+func Input(children ...Node) Node {
+	return &Element{"input", children}
 }
 
 func Fieldset(children ...Node) Node {
