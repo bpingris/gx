@@ -281,7 +281,7 @@ func Textarea(children ...Node) Node {
 }
 
 func Img(children ...Node) Node {
-	return &Element{"img", nil}
+	return &Element{"img", children}
 }
 
 func Video(children ...Node) Node {

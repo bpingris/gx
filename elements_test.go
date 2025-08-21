@@ -111,6 +111,21 @@ func TestVoidElements(t *testing.T) {
 	}
 }
 
+func TestVoidElementsWithAttributes(t *testing.T) {
+	ctx := gx.NewContext()
+	var buf strings.Builder
+
+	div := gx.Div(gx.Class("foo"), gx.Img(gx.Src("foo.png")))
+
+	div.Render(ctx, &buf)
+
+	expected := `<div class="foo"><img src="foo.png"></div>`
+
+	if buf.String() != normalizeHTML(expected) {
+		t.Errorf("expected '%q', got '%q'", expected, buf.String())
+	}
+}
+
 func TestClosingElementsWithoutChildren(t *testing.T) {
 	ctx := gx.NewContext()
 	var buf strings.Builder
