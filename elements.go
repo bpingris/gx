@@ -280,7 +280,7 @@ func Textarea(children ...Node) Node {
 	return &Element{"textarea", children}
 }
 
-func Img() Node {
+func Img(children ...Node) Node {
 	return &Element{"img", nil}
 }
 
