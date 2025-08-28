@@ -106,3 +106,33 @@ func TestIfElseFalse(t *testing.T) {
 		t.Error("Expected non-conditional content to always be rendered")
 	}
 }
+
+func TestIff(t *testing.T) {
+	var buf strings.Builder
+
+	type Foo struct {
+		Bar struct {
+			Baz string
+		}
+	}
+	var foo *Foo
+
+	node := gx.Div(
+		gx.Iff(foo != nil,
+			func() gx.Node {
+				return gx.Div(gx.Text(foo.Bar.Baz))
+			},
+		),
+		gx.Div(gx.Text("Always visible content")),
+	)
+
+	node.Render(gx.NewContext(), &buf)
+	result := buf.String()
+
+	if !strings.Contains(result, "Always visible content") {
+		t.Error("Expected non-conditional content to always be rendered")
+	}
+	if strings.Contains(result, "Foo") {
+		t.Error("Not expecting conditional content to be rendered when condition is false")
+	}
+}

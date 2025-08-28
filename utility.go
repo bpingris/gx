@@ -27,6 +27,14 @@ func IfElse(condition bool, trueChild, falseChild Node) Node {
 	return &ifNode{condition, trueChild, falseChild}
 }
 
+func Iff(condition bool, fn func() Node) Node {
+	var child Node
+	if condition {
+		child = fn()
+	}
+	return &ifNode{condition, child, nil}
+}
+
 var (
 	_ Node = (*ifNode)(nil)
 )
