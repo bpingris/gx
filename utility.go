@@ -74,16 +74,3 @@ func (r *repeatNode) Render(c *Context, w io.Writer) error {
 func Repeat(times int, child Node) Node { return &repeatNode{times, child} }
 
 var _ Node = (*repeatNode)(nil)
-
-// type switchNode[T comparable] struct {
-// 	value    T
-// 	cases    map[T]Node
-// 	fallback Node
-// }
-//
-// func (s *switchNode[T]) Render(c *Context, w io.Writer) error {
-// 	var child Node
-// 	if cchild, ok := s.cases[s.value]; ok {
-// 		child = cchild
-// 	}
-// }

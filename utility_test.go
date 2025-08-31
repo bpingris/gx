@@ -136,3 +136,20 @@ func TestIff(t *testing.T) {
 		t.Error("Not expecting conditional content to be rendered when condition is false")
 	}
 }
+
+func TestMap(t *testing.T) {
+	var buf strings.Builder
+
+	items := []string{"foo", "bar", "baz"}
+	node := gx.Ul(
+		gx.Map(items, func(item string, _ int) gx.Node {
+			return gx.Li(gx.Text(item))
+		}),
+	)
+	node.Render(gx.NewContext(), &buf)
+	result := buf.String()
+
+	if result != `<ul><li>foo</li><li>bar</li><li>baz</li></ul>` {
+		t.Error("Expected map to render each item in the list")
+	}
+}
