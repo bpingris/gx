@@ -3,6 +3,7 @@ package gx
 import (
 	"bytes"
 	"fmt"
+	"html"
 	"io"
 	"strings"
 )
@@ -25,301 +26,313 @@ var voidElements = map[string]bool{
 }
 
 type Element struct {
-	tag      string
-	children []Node
+	tag     string
+	attrs   map[string]string
+	content []Node
+}
+
+func newElement(tag string, children []Node) *Element {
+	attrs := make(map[string]string)
+	var content []Node
+	for i := range children {
+		if attr, ok := children[i].(*attrNode); ok {
+			attrs[attr.key] = attr.value
+		} else {
+			content = append(content, children[i])
+		}
+	}
+	return &Element{tag, attrs, content}
 }
 
 func (e *Element) Render(c *Context, w io.Writer) error {
-	if _, err := w.Write([]byte("<" + e.tag)); err != nil {
+	if _, err := io.WriteString(w, "<"); err != nil {
+		return err
+	}
+	if _, err := io.WriteString(w, e.tag); err != nil {
 		return err
 	}
 
-	attrs := make(map[string]string)
-	var contentChildren []Node
-
-	for i := range e.children {
-		if attr, ok := e.children[i].(*attrNode); ok {
-			attrs[attr.key] = attr.value
-		} else {
-			contentChildren = append(contentChildren, e.children[i])
-		}
-	}
-
-	for attr, value := range attrs {
-		if _, err := fmt.Fprintf(w, ` %s="%s"`, attr, value); err != nil {
+	for attr, value := range e.attrs {
+		if _, err := fmt.Fprintf(w, ` %s="%s"`, html.EscapeString(attr), html.EscapeString(value)); err != nil {
 			return err
 		}
 	}
 
 	if voidElements[e.tag] {
-		_, err := w.Write([]byte(">"))
+		_, err := io.WriteString(w, ">")
 		return err
 	}
 
-	if len(contentChildren) == 0 {
-		_, err := w.Write([]byte("></" + e.tag + ">"))
+	if len(e.content) == 0 {
+		if _, err := io.WriteString(w, "></"); err != nil {
+			return err
+		}
+		if _, err := io.WriteString(w, e.tag); err != nil {
+			return err
+		}
+		_, err := io.WriteString(w, ">")
 		return err
 	}
 
-	if _, err := w.Write([]byte(">")); err != nil {
+	if _, err := io.WriteString(w, ">"); err != nil {
 		return err
 	}
 
-	for i := range contentChildren {
-		if err := contentChildren[i].Render(c, w); err != nil {
+	for i := range e.content {
+		if err := e.content[i].Render(c, w); err != nil {
 			return err
 		}
 	}
 
-	_, err := w.Write([]byte("</" + e.tag + ">"))
+	if _, err := io.WriteString(w, "</"); err != nil {
+		return err
+	}
+	if _, err := io.WriteString(w, e.tag); err != nil {
+		return err
+	}
+	_, err := io.WriteString(w, ">")
 	return err
 
 }
 
 func Html(children ...Node) Node {
-	return &Element{"html", children}
+	return newElement("html", children)
 }
 
 func Head(children ...Node) Node {
-	return &Element{"head", children}
+	return newElement("head", children)
 }
 
 func Body(children ...Node) Node {
-	return &Element{"body", children}
+	return newElement("body", children)
 }
 
 func Title(children ...Node) Node {
-	return &Element{"title", children}
+	return newElement("title", children)
 }
 
 func Meta(children ...Node) Node {
-	return &Element{"meta", children}
+	return newElement("meta", children)
 }
 
 func Link(children ...Node) Node {
-	return &Element{"link", children}
+	return newElement("link", children)
 }
 
 func Script(children ...Node) Node {
-	return &Element{"script", children}
+	return newElement("script", children)
 }
 
 func Style(children ...Node) Node {
-	return &Element{"style", children}
+	return newElement("style", children)
 }
 
 func Section(children ...Node) Node {
-	return &Element{"section", children}
+	return newElement("section", children)
 }
 
 func Article(children ...Node) Node {
-	return &Element{"article", children}
+	return newElement("article", children)
 }
 
 func Header(children ...Node) Node {
-	return &Element{"header", children}
+	return newElement("header", children)
 }
 
 func Footer(children ...Node) Node {
-	return &Element{"footer", children}
+	return newElement("footer", children)
 }
 
 func Nav(children ...Node) Node {
-	return &Element{"nav", children}
+	return newElement("nav", children)
 }
 
 func Aside(children ...Node) Node {
-	return &Element{"aside", children}
+	return newElement("aside", children)
 }
 
 func Main(children ...Node) Node {
-	return &Element{"main", children}
+	return newElement("main", children)
 }
 
 func Div(children ...Node) Node {
-	return &Element{"div", children}
+	return newElement("div", children)
 }
 
 func Span(children ...Node) Node {
-	return &Element{"span", children}
+	return newElement("span", children)
 }
 
 func P(children ...Node) Node {
-	return &Element{"p", children}
+	return newElement("p", children)
 }
 
 func H1(children ...Node) Node {
-	return &Element{"h1", children}
+	return newElement("h1", children)
 }
 
 func H2(children ...Node) Node {
-	return &Element{"h2", children}
+	return newElement("h2", children)
 }
 
 func H3(children ...Node) Node {
-	return &Element{"h3", children}
+	return newElement("h3", children)
 }
 
 func H4(children ...Node) Node {
-	return &Element{"h4", children}
+	return newElement("h4", children)
 }
 
 func H5(children ...Node) Node {
-	return &Element{"h5", children}
+	return newElement("h5", children)
 }
 
 func H6(children ...Node) Node {
-	return &Element{"h6", children}
+	return newElement("h6", children)
 }
 
 func Strong(children ...Node) Node {
-	return &Element{"strong", children}
+	return newElement("strong", children)
 }
 
 func Em(children ...Node) Node {
-	return &Element{"em", children}
+	return newElement("em", children)
 }
 
 func B(children ...Node) Node {
-	return &Element{"b", children}
+	return newElement("b", children)
 }
 
 func I(children ...Node) Node {
-	return &Element{"i", children}
+	return newElement("i", children)
 }
 
 func Small(children ...Node) Node {
-	return &Element{"small", children}
+	return newElement("small", children)
 }
 
 func Code(children ...Node) Node {
-	return &Element{"code", children}
+	return newElement("code", children)
 }
 
 func Pre(children ...Node) Node {
-	return &Element{"pre", children}
+	return newElement("pre", children)
 }
 
 func Blockquote(children ...Node) Node {
-	return &Element{"blockquote", children}
+	return newElement("blockquote", children)
 }
 
 func A(children ...Node) Node {
-	return &Element{"a", children}
+	return newElement("a", children)
 }
 
 func Ul(children ...Node) Node {
-	return &Element{"ul", children}
+	return newElement("ul", children)
 }
 
 func Ol(children ...Node) Node {
-	return &Element{"ol", children}
+	return newElement("ol", children)
 }
 
 func Li(children ...Node) Node {
-	return &Element{"li", children}
+	return newElement("li", children)
 }
 
 func Table(children ...Node) Node {
-	return &Element{"table", children}
+	return newElement("table", children)
 }
 
 func Tr(children ...Node) Node {
-	return &Element{"tr", children}
+	return newElement("tr", children)
 }
 
 func Td(children ...Node) Node {
-	return &Element{"td", children}
+	return newElement("td", children)
 }
 
 func Th(children ...Node) Node {
-	return &Element{"th", children}
+	return newElement("th", children)
 }
 
 func Thead(children ...Node) Node {
-	return &Element{"thead", children}
+	return newElement("thead", children)
 }
 
 func Tbody(children ...Node) Node {
-	return &Element{"tbody", children}
+	return newElement("tbody", children)
 }
 
 func Tfoot(children ...Node) Node {
-	return &Element{"tfoot", children}
+	return newElement("tfoot", children)
 }
 
 func Form(children ...Node) Node {
-	return &Element{"form", children}
+	return newElement("form", children)
 }
 
 func Input(children ...Node) Node {
-	return &Element{"input", children}
+	return newElement("input", children)
 }
 
 func Fieldset(children ...Node) Node {
-	return &Element{"fieldset", children}
+	return newElement("fieldset", children)
 }
 
 func Button(children ...Node) Node {
-	return &Element{"button", children}
+	return newElement("button", children)
 }
 
 func Label(children ...Node) Node {
-	return &Element{"label", children}
+	return newElement("label", children)
 }
 
 func Select(children ...Node) Node {
-	return &Element{"select", children}
+	return newElement("select", children)
 }
 
 func Option(children ...Node) Node {
-	return &Element{"option", children}
+	return newElement("option", children)
 }
 
 func Textarea(children ...Node) Node {
-	return &Element{"textarea", children}
+	return newElement("textarea", children)
 }
 
 func Img(children ...Node) Node {
-	return &Element{"img", children}
+	return newElement("img", children)
 }
 
 func Video(children ...Node) Node {
-	return &Element{"video", children}
+	return newElement("video", children)
 }
 
 func Audio(children ...Node) Node {
-	return &Element{"audio", children}
+	return newElement("audio", children)
 }
 
 func Canvas(children ...Node) Node {
-	return &Element{"canvas", children}
+	return newElement("canvas", children)
 }
 
 func Svg(children ...Node) Node {
-	return &Element{"svg", children}
+	return newElement("svg", children)
 }
 
 func Br() Node {
-	return &Element{"br", nil}
+	return newElement("br", nil)
 }
 
 func Hr() Node {
-	return &Element{"hr", nil}
+	return newElement("hr", nil)
 }
 
 func CSSLink(url string) Node {
-	return &Element{
-		"link",
-		[]Node{Attr("rel", "stylesheet"), Attr("href", url)},
-	}
+	return newElement("link", []Node{Attr("rel", "stylesheet"), Attr("href", url)})
 }
 
 func JSScript(url string) Node {
-	return &Element{
-		"script",
-		[]Node{Attr("src", url)},
-	}
+	return newElement("script", []Node{Attr("src", url)})
 }
 
 func InlineCSS(css string) Node {
@@ -339,7 +352,7 @@ func ResponsiveViewport() Node {
 }
 
 func Charset(charset string) Node {
-	return Meta(Name("charset"), Attr("charset", charset))
+	return Meta(Attr("charset", charset))
 }
 
 func UTF8Charset() Node {
@@ -367,7 +380,7 @@ type rawNode struct {
 }
 
 func (r *rawNode) Render(c *Context, w io.Writer) error {
-	_, err := w.Write([]byte(r.text))
+	_, err := io.WriteString(w, r.text)
 	return err
 }
 
@@ -380,7 +393,7 @@ type textNode struct {
 }
 
 func (t *textNode) Render(c *Context, w io.Writer) error {
-	_, err := fmt.Fprintf(w, "%s", t.text)
+	_, err := io.WriteString(w, html.EscapeString(t.text))
 	return err
 }
 
@@ -431,7 +444,7 @@ const slotPlaceholder = "<!-- slot -->"
 type slotNode struct{}
 
 func (s *slotNode) Render(c *Context, w io.Writer) error {
-	_, err := w.Write([]byte(slotPlaceholder))
+	_, err := io.WriteString(w, slotPlaceholder)
 	return err
 }
 
@@ -457,7 +470,7 @@ type compiledNode struct {
 }
 
 func (cn *compiledNode) Render(c *Context, w io.Writer) error {
-	if _, err := w.Write([]byte(cn.template.beforeSlot)); err != nil {
+	if _, err := io.WriteString(w, cn.template.beforeSlot); err != nil {
 		return err
 	}
 
@@ -467,7 +480,7 @@ func (cn *compiledNode) Render(c *Context, w io.Writer) error {
 		}
 	}
 
-	_, err := w.Write([]byte(cn.template.afterSlot))
+	_, err := io.WriteString(w, cn.template.afterSlot)
 	return err
 }
 

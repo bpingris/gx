@@ -20,6 +20,20 @@ func (c *Context) Push(value any) {
 	c.values[typ] = value
 }
 
+func (c *Context) PushScoped(value any) func() {
+	typ := reflect.TypeOf(value)
+	prev, existed := c.values[typ]
+	c.values[typ] = value
+
+	return func() {
+		if existed {
+			c.values[typ] = prev
+		} else {
+			delete(c.values, typ)
+		}
+	}
+}
+
 func Use[T any](c *Context) T {
 	var zero T
 	typ := reflect.TypeOf(zero)

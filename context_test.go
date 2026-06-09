@@ -1,6 +1,7 @@
 package gx_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/bpingris/gx"
@@ -61,4 +62,26 @@ func TestContextOverwriteValue(t *testing.T) {
 	if result != "second" {
 		t.Errorf("Expected 'second', got %q", result)
 	}
+}
+
+func TestProvideScoping(t *testing.T) {
+	ctx := gx.NewContext()
+	var buf strings.Builder
+
+	gx.Provide("outer",
+		gx.Provide("inner", gx.WithContext(func(c *gx.Context) gx.Node {
+			innerVal := gx.Use[string](c)
+			if innerVal != "inner" {
+				t.Errorf("inside inner Provide: expected 'inner', got %q", innerVal)
+			}
+			return gx.Text(innerVal)
+		})),
+		gx.WithContext(func(c *gx.Context) gx.Node {
+			outerVal := gx.Use[string](c)
+			if outerVal != "outer" {
+				t.Errorf("after inner Provide: expected 'outer', got %q", outerVal)
+			}
+			return gx.Text(outerVal)
+		})).Render(ctx, &buf)
+
 }

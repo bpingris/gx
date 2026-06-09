@@ -143,3 +143,23 @@ func TestClosingElementsWithoutChildren(t *testing.T) {
 		t.Errorf("expected '%q', got '%q'", expected, buf.String())
 	}
 }
+
+func TestTextNodeEscaping(t *testing.T) {
+	ctx := gx.NewContext()
+	var buf strings.Builder
+	gx.Text(`<script>alert("xss")</script>`).Render(ctx, &buf)
+	expected := `&lt;script&gt;alert(&#34;xss&#34;)&lt;/script&gt;`
+	if buf.String() != expected {
+		t.Errorf("expected %q, got %q", expected, buf.String())
+	}
+}
+
+func TestAttrNodeEscaping(t *testing.T) {
+	ctx := gx.NewContext()
+	var buf strings.Builder
+	gx.Div(gx.Attr("data-val", `a&b"c`)).Render(ctx, &buf)
+	expected := `<div data-val="a&amp;b&#34;c"></div>`
+	if buf.String() != expected {
+		t.Errorf("expected %q, got %q", expected, buf.String())
+	}
+}

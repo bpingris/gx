@@ -137,6 +137,34 @@ func TestIff(t *testing.T) {
 	}
 }
 
+func TestIffLazy(t *testing.T) {
+	called := 0
+	node := gx.Div(
+		gx.Iff(true, func() gx.Node {
+			called++
+			return gx.Text("shown")
+		}),
+		gx.Iff(false, func() gx.Node {
+			called++
+			return gx.Text("hidden")
+		}),
+	)
+
+	var buf strings.Builder
+	node.Render(gx.NewContext(), &buf)
+	result := buf.String()
+
+	if called != 1 {
+		t.Errorf("fn should be called exactly once (only when condition is true), got %d", called)
+	}
+	if !strings.Contains(result, "shown") {
+		t.Error("Expected true-condition content to be rendered")
+	}
+	if strings.Contains(result, "hidden") {
+		t.Error("Not expecting false-condition content to be rendered")
+	}
+}
+
 func TestMap(t *testing.T) {
 	var buf strings.Builder
 

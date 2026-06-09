@@ -2,6 +2,7 @@ package gx
 
 import (
 	"fmt"
+	"html"
 	"io"
 )
 
@@ -11,7 +12,7 @@ type attrNode struct {
 }
 
 func (a *attrNode) Render(c *Context, w io.Writer) error {
-	_, err := fmt.Fprintf(w, ` %s="%s"`, a.key, a.value)
+	_, err := fmt.Fprintf(w, ` %s="%s"`, html.EscapeString(a.key), html.EscapeString(a.value))
 	return err
 }
 
